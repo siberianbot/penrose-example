@@ -1,0 +1,7 @@
+.idea/
+builddir/
+subprojects/**/
+!subprojects/*.wrap
+
+**/**.spv
+imgui.ini
