@@ -1,7 +1,8 @@
 .idea/
 builddir/
 subprojects/**/
-!subprojects/*.wrap
+subprojects/*.wrap
+!subprojects/penrose.wrap
 
 **/**.spv
 imgui.ini

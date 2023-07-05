@@ -1,0 +1,4 @@
+[wrap-git]
+url = https://github.com/siberianbot/penrose.git
+revision = develop/library
+depth = 1

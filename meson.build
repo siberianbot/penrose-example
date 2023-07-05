@@ -7,11 +7,15 @@ project(
         'cpp_std=c++20'
     ])
 
+deps = [
+    subproject('penrose').get_variable('penrose_dep'),
+]
+
 src = [
     'src/Main.cpp'
 ]
 
-executable('penrose_example', src)
+executable('penrose_example', src, dependencies: deps)
 
 # shaders compilation
 shaders = [
