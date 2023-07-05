@@ -1,7 +1,6 @@
 .idea/
 builddir/
-subprojects/**/
-subprojects/*.wrap
+subprojects/*
 !subprojects/penrose.wrap
 
 **/**.spv
