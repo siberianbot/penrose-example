@@ -3,6 +3,7 @@
 #include <string>
 
 #include <Penrose/Core/Engine.hpp>
+#include <Penrose/Rendering/RenderContext.hpp>
 
 // #include "src/Assets/AssetDictionary.hpp"
 // #include "src/ECS/ECSManager.hpp"
@@ -57,6 +58,7 @@ int main() {
     });
 
     Penrose::Engine engine;
+    engine.resources().get<Penrose::RenderContext>()->setRenderGraph(Penrose::makeDefaultRenderGraph());
 
     // TODO: not available while these resources kept unexposed
 //    auto assetDictionary = engine.resources().get<Penrose::AssetDictionary>();
