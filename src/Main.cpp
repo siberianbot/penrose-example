@@ -123,6 +123,7 @@ int main() {
     {
         auto meshRendererComponent = ecsManager->tryGetComponent<Penrose::MeshRendererComponent>(cubeEntity).value();
         meshRendererComponent->setMesh("models/cube.obj");
+        meshRendererComponent->setAlbedo("textures/cube.png");
     }
 
     auto cameraEntity = ecsManager->createEntity();
