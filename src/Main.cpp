@@ -3,6 +3,7 @@
 #include <string>
 
 #include <Penrose/Assets/AssetDictionary.hpp>
+#include <Penrose/Assets/AssetManager.hpp>
 #include <Penrose/Core/Engine.hpp>
 #include <Penrose/ECS/ECSManager.hpp>
 #include <Penrose/Rendering/RenderContext.hpp>
@@ -60,6 +61,12 @@ int main() {
 
     auto assetDictionary = engine.resources().get<Penrose::AssetDictionary>();
     assetDictionary->addDir("data");
+
+    auto assetManager = engine.resources().get<Penrose::AssetManager>();
+    assetManager->queueMeshLoading("models/cube.obj");
+    assetManager->queueImageLoading("textures/cube.png");
+    assetManager->queueShaderLoading("shaders/default-forward-rendering.frag.spv");
+    assetManager->queueShaderLoading("shaders/default-forward-rendering.vert.spv");
 
     auto graph = Penrose::RenderGraph{
             .targets = {
