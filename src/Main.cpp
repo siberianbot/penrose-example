@@ -1,5 +1,6 @@
 #include <csignal>
 #include <iostream>
+#include <ranges>
 #include <string>
 
 #include <Penrose/Assets/AssetDictionary.hpp>
@@ -124,28 +125,33 @@ int main() {
     renderContext->setRenderGraph(graph);
 
     auto ecsManager = engine.resources().get<Penrose::ECSManager>();
-    auto cubeEntity = ecsManager->createEntity();
-    ecsManager->createComponent(cubeEntity, Penrose::TransformComponent::name());
-    ecsManager->createComponent(cubeEntity, Penrose::MeshRendererComponent::name());
-    {
-        auto meshRendererComponent = ecsManager->tryGetComponent<Penrose::MeshRendererComponent>(cubeEntity).value();
-        meshRendererComponent->setMesh("models/cube.obj");
-        meshRendererComponent->setAlbedo("textures/cube.png");
-    }
-
-    auto cameraEntity = ecsManager->createEntity();
-    ecsManager->createComponent(cameraEntity, Penrose::RenderListProviderComponent::name());
-    ecsManager->createComponent(cameraEntity, Penrose::TransformComponent::name());
-    ecsManager->createComponent(cameraEntity, Penrose::CameraComponent::name());
-    {
-        auto transformComponent = ecsManager->tryGetComponent<Penrose::TransformComponent>(cameraEntity).value();
-        transformComponent->getPos() = glm::vec3(4);
-        transformComponent->getRot() = glm::vec3(0, glm::radians(156.0f), 0);
-    }
-
     auto scene = Penrose::Scene();
-    scene.insertEntity(scene.getRoot(), cubeEntity);
-    scene.insertEntity(scene.getRoot(), cameraEntity);
+
+    for (int x: std::ranges::views::iota(-2, 3)) {
+        auto entity = ecsManager->createEntity();
+
+        auto meshRenderer = ecsManager->addComponent<Penrose::MeshRendererComponent>(entity);
+        meshRenderer->setMesh("models/cube.obj");
+        meshRenderer->setAlbedo("textures/cube.png");
+
+        auto transform = ecsManager->addComponent<Penrose::TransformComponent>(entity);
+        transform->getPos() = glm::vec3(2.5 * x, 0, 4);
+
+        scene.insertEntity(scene.getRoot(), entity);
+    }
+
+    {
+        auto entity = ecsManager->createEntity();
+
+        ecsManager->addComponent<Penrose::RenderListProviderComponent>(entity);
+        ecsManager->addComponent<Penrose::CameraComponent>(entity);
+
+        auto transform = ecsManager->addComponent<Penrose::TransformComponent>(entity);
+        transform->getPos() = glm::vec3(0, 0, -4);
+        transform->getRot() = glm::vec3(0, glm::radians(-90.0f), 0);
+
+        scene.insertEntity(scene.getRoot(), entity);
+    }
 
     auto sceneManager = engine.resources().get<Penrose::SceneManager>();
     sceneManager->setCurrentScene(scene);
