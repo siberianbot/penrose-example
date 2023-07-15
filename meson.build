@@ -8,6 +8,7 @@ project(
     ])
 
 deps = [
+    subproject('fmt').get_variable('fmt_dep'),
     subproject('penrose').get_variable('penrose_dep'),
 ]
 

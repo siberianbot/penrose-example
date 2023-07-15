@@ -12,10 +12,45 @@
 
 #include <Penrose/Builtin/ECS/CameraComponent.hpp>
 #include <Penrose/Builtin/ECS/MeshRendererComponent.hpp>
-#include <Penrose/Builtin/ECS/RenderListProviderComponent.hpp>
+#include <Penrose/Builtin/ECS/RenderSourceComponent.hpp>
 #include <Penrose/Builtin/ECS/TransformComponent.hpp>
 #include <Penrose/Builtin/Rendering/ForwardSceneDrawRenderOperator.hpp>
 #include <Penrose/Builtin/Rendering/ImGuiDrawRenderOperator.hpp>
+
+class CameraRotateSystem : public Penrose::System {
+public:
+    explicit CameraRotateSystem(Penrose::ResourceSet *resources)
+            : _ecsManager(resources->get<Penrose::ECSManager>()) {
+        //
+    }
+
+    ~CameraRotateSystem() override = default;
+
+    void update(float delta) override {
+        auto cameras = this->_ecsManager->queryComponents<Penrose::CameraComponent>();
+
+        for (const auto &camera: cameras) {
+            auto transform = this->_ecsManager->tryGetComponent<Penrose::TransformComponent>(camera);
+
+            if (!transform.has_value()) {
+                continue;
+            }
+
+            transform->get()->getRot().y += glm::radians(delta * 45.0f);
+
+            if (transform->get()->getRot().y > glm::radians(360.0f)) {
+                transform->get()->getRot().y -= glm::radians(360.0f);
+            } else if (transform->get()->getRot().y < glm::radians(0.0f)) {
+                transform->get()->getRot().y += glm::radians(360.0f);
+            }
+        }
+    }
+
+    [[nodiscard]] constexpr static std::string_view name() { return "CameraRotate"; }
+
+private:
+    Penrose::ECSManager *_ecsManager;
+};
 
 void printError(const std::exception &error, int level) {
     if (level > 1) {
@@ -125,14 +160,16 @@ int main() {
     renderContext->setRenderGraph(graph);
 
     auto ecsManager = engine.resources().get<Penrose::ECSManager>();
+    ecsManager->registerSystem<CameraRotateSystem>();
+
     auto scene = Penrose::Scene();
 
     for (int x: std::ranges::views::iota(-2, 3)) {
         auto entity = ecsManager->createEntity();
 
         auto meshRenderer = ecsManager->addComponent<Penrose::MeshRendererComponent>(entity);
-        meshRenderer->setMesh("models/cube.obj");
-        meshRenderer->setAlbedo("textures/cube.png");
+        meshRenderer->setMeshAsset("models/cube.obj");
+        meshRenderer->setAlbedoTextureAsset("textures/cube.png");
 
         auto transform = ecsManager->addComponent<Penrose::TransformComponent>(entity);
         transform->getPos() = glm::vec3(2.5 * x, 0, 4);
@@ -143,8 +180,10 @@ int main() {
     {
         auto entity = ecsManager->createEntity();
 
-        ecsManager->addComponent<Penrose::RenderListProviderComponent>(entity);
-        ecsManager->addComponent<Penrose::CameraComponent>(entity);
+        ecsManager->addComponent<Penrose::RenderSourceComponent>(entity);
+
+        auto camera = ecsManager->addComponent<Penrose::CameraComponent>(entity);
+        camera->getFov() = glm::radians(120.0f);
 
         auto transform = ecsManager->addComponent<Penrose::TransformComponent>(entity);
         transform->getPos() = glm::vec3(0, 0, -4);
