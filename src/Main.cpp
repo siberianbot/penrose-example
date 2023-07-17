@@ -162,7 +162,8 @@ int main() {
     auto ecsManager = engine.resources().get<Penrose::ECSManager>();
     ecsManager->registerSystem<CameraRotateSystem>();
 
-    auto scene = Penrose::Scene();
+    auto sceneManager = engine.resources().get<Penrose::SceneManager>();
+    auto root = sceneManager->addRoot("Default");
 
     for (int x: std::ranges::views::iota(-2, 3)) {
         auto entity = ecsManager->createEntity();
@@ -174,7 +175,7 @@ int main() {
         auto transform = ecsManager->addComponent<Penrose::TransformComponent>(entity);
         transform->getPos() = glm::vec3(2.5 * x, 0, 4);
 
-        scene.insertEntity(scene.getRoot(), entity);
+        sceneManager->insertEntityNode(root, entity);
     }
 
     {
@@ -189,11 +190,8 @@ int main() {
         transform->getPos() = glm::vec3(0, 0, -4);
         transform->getRot() = glm::vec3(0, glm::radians(-90.0f), 0);
 
-        scene.insertEntity(scene.getRoot(), entity);
+        sceneManager->insertEntityNode(root, entity);
     }
-
-    auto sceneManager = engine.resources().get<Penrose::SceneManager>();
-    sceneManager->setCurrentScene(scene);
 
     engine.run();
 
