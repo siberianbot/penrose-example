@@ -52,7 +52,7 @@ private:
     Penrose::ECSManager *_ecsManager;
 };
 
-void printError(const std::exception &error, int level) {
+void printError(const std::exception &error, int level) { // NOLINT(misc-no-recursion)
     if (level > 1) {
         std::cerr << std::string(2 * level, ' ');
     }
@@ -95,6 +95,8 @@ int main() {
 
     Penrose::Engine engine;
 
+    engine.resources().add<Penrose::RenderOperatorFactory, Penrose::ImGuiDrawRenderOperatorFactory>();
+
     auto assetDictionary = engine.resources().get<Penrose::AssetDictionary>();
     assetDictionary->addDir("data");
 
@@ -104,59 +106,38 @@ int main() {
     assetManager->queueShaderLoading("shaders/default-forward-rendering.frag.spv");
     assetManager->queueShaderLoading("shaders/default-forward-rendering.vert.spv");
 
-    auto graph = Penrose::RenderGraph{
-            .targets = {
-                    Penrose::RenderTarget{
-                            .source = Penrose::RenderTargetSource::Swapchain
-                    },
-                    Penrose::RenderTarget{
-                            .source = Penrose::RenderTargetSource::Image,
-                            .type = Penrose::RenderTargetType::DepthStencil,
-                            .format = Penrose::RenderFormat::D32Float
-                    }
-            },
-            .subgraphs = {
-                    Penrose::RenderSubgraph{
-                            .dependsOn = {},
-                            .attachments = {
-                                    Penrose::RenderAttachment{
-                                            .targetIdx = 0,
-                                            .format = std::nullopt,
-                                            .clearValue = {.color = {0, 0, 0, 1}},
-                                            .loadOp = Penrose::RenderAttachmentLoadOp::Clear,
-                                            .storeOp = Penrose::RenderAttachmentStoreOp::Store,
-                                            .initialLayout = Penrose::RenderAttachmentLayout::Undefined,
-                                            .finalLayout = Penrose::RenderAttachmentLayout::Present
-                                    },
-                                    Penrose::RenderAttachment{
-                                            .targetIdx = 1,
-                                            .format = Penrose::RenderFormat::D32Float,
-                                            .clearValue = {.depth = 1},
-                                            .loadOp = Penrose::RenderAttachmentLoadOp::Clear,
-                                            .storeOp = Penrose::RenderAttachmentStoreOp::Store,
-                                            .initialLayout = Penrose::RenderAttachmentLayout::Undefined,
-                                            .finalLayout = Penrose::RenderAttachmentLayout::DepthStencilAttachment
-                                    }
-                            },
-                            .passes = {
-                                    Penrose::RenderPass{
-                                            .dependsOn = {},
-                                            .colorAttachments = {0},
-                                            .depthStencilAttachment = 1,
-                                            .operatorName = Penrose::ForwardSceneDrawRenderOperator::name()
-                                    },
-                                    Penrose::RenderPass{
-                                            .dependsOn = {0},
-                                            .colorAttachments = {0},
-                                            .operatorName = Penrose::ImGuiDrawRenderOperator::name()
-                                    }
-                            }
-                    }
-            }
-    };
+    auto graph = Penrose::RenderGraph()
+            .setTarget("swapchain", Penrose::RenderTarget::makeSwapchain())
+            .setTarget("depth", Penrose::RenderTarget::makeImage(Penrose::RenderTargetType::DepthStencil,
+                                                                 Penrose::RenderFormat::D32Float,
+                                                                 std::nullopt))
+            .setSubgraph("default", Penrose::RenderSubgraph()
+                    .addAttachment(Penrose::RenderAttachment("swapchain")
+                                           .setClearValue(Penrose::RenderAttachmentClearValue({0, 0, 0, 1}))
+                                           .setLoadOp(Penrose::RenderAttachmentLoadOp::Clear)
+                                           .setStoreOp(Penrose::RenderAttachmentStoreOp::Store)
+                                           .setInitialLayout(Penrose::RenderAttachmentLayout::Undefined)
+                                           .setFinalLayout(Penrose::RenderAttachmentLayout::Present))
+                    .addAttachment(Penrose::RenderAttachment("depth")
+                                           .setFormat(Penrose::RenderFormat::D32Float)
+                                           .setClearValue(Penrose::RenderAttachmentClearValue().setDepth(1))
+                                           .setLoadOp(Penrose::RenderAttachmentLoadOp::Clear)
+                                           .setStoreOp(Penrose::RenderAttachmentStoreOp::Store)
+                                           .setInitialLayout(Penrose::RenderAttachmentLayout::Undefined)
+                                           .setFinalLayout(Penrose::RenderAttachmentLayout::DepthStencilAttachment))
+                    .addPass(Penrose::RenderPass()
+                                     .addColorAttachmentIdx(0)
+                                     .setDepthStencilAttachment(1)
+                                     .setOperator(Penrose::RenderPassOperator(
+                                             std::string(Penrose::ForwardSceneDrawRenderOperator::NAME))))
+                    .addPass(Penrose::RenderPass()
+                                     .addDependencyIdx(0)
+                                     .addColorAttachmentIdx(0)
+                                     .setOperator(Penrose::RenderPassOperator(
+                                             std::string(Penrose::ImGuiDrawRenderOperator::NAME))))
+            );
 
     auto renderContext = engine.resources().get<Penrose::RenderContext>();
-    renderContext->registerRenderOperator<Penrose::ImGuiDrawRenderOperator>();
     renderContext->setRenderGraph(graph);
 
     auto ecsManager = engine.resources().get<Penrose::ECSManager>();
