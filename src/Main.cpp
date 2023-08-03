@@ -12,8 +12,8 @@
 
 #include <Penrose/Builtin/ECS/CameraComponent.hpp>
 #include <Penrose/Builtin/ECS/MeshRendererComponent.hpp>
-#include <Penrose/Builtin/ECS/RenderSourceComponent.hpp>
 #include <Penrose/Builtin/ECS/TransformComponent.hpp>
+#include <Penrose/Builtin/ECS/ViewComponent.hpp>
 #include <Penrose/Builtin/Rendering/ForwardSceneDrawRenderOperator.hpp>
 #include <Penrose/Builtin/Rendering/ImGuiDrawRenderOperator.hpp>
 
@@ -162,7 +162,7 @@ int main() {
     {
         auto entity = ecsManager->createEntity();
 
-        ecsManager->addComponent<Penrose::RenderSourceComponent>(entity);
+        ecsManager->addComponent<Penrose::ViewComponent>(entity);
 
         auto camera = ecsManager->addComponent<Penrose::CameraComponent>(entity);
         camera->getFov() = glm::radians(120.0f);
