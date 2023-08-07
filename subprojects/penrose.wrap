@@ -2,3 +2,6 @@
 url = https://github.com/siberianbot/penrose.git
 revision = HEAD
 depth = 1
+
+[provide]
+penrose = penrose_dep
